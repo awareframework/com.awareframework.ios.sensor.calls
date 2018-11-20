@@ -1,5 +1,5 @@
 import XCTest
-import com.awareframework.ios.sensor.calls
+import com_awareframework_ios_sensor_calls
 
 class Tests: XCTestCase {
     

@@ -7,12 +7,39 @@
 //
 
 import UIKit
+import com_awareframework_ios_sensor_calls
 
 class ViewController: UIViewController {
 
+    var sensor:CallsSensor?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        sensor = CallsSensor.init(CallsSensor.Config().apply{config in
+            config.debug = true
+        })
+        sensor?.start()
+    }
+    
+    class Observer: CallsObserver{
+        func onCall(data: CallData) {
+            print(data)
+        }
+        
+        func onRinging(number: String?) {
+            print(number)
+        }
+        
+        func onBusy(number: String?) {
+            print(number)
+        }
+        
+        func onFree(number: String?) {
+            print(number)
+        }
+        
+        
     }
 
     override func didReceiveMemoryWarning() {
