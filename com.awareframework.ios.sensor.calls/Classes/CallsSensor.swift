@@ -129,7 +129,7 @@ public class CallsSensor: AwareSensor {
         public static let ANSWERED_EXTERNALLY_TYPE = 7
     }
     
-    var CONFIG = Config()
+    public var CONFIG = Config()
     
     var callObserver: CXCallObserver? = nil
     
