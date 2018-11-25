@@ -1,13 +1,11 @@
 # Aware Calls
 
-[![CI Status](https://img.shields.io/travis/tetujin/com.awareframework.ios.sensor.calls.svg?style=flat)](https://travis-ci.org/tetujin/com.awareframework.ios.sensor.calls)
+[![CI Status](https://img.shields.io/travis/awareframework/com.awareframework.ios.sensor.calls.svg?style=flat)](https://travis-ci.org/awareframework/com.awareframework.ios.sensor.calls)
 [![Version](https://img.shields.io/cocoapods/v/com.awareframework.ios.sensor.calls.svg?style=flat)](https://cocoapods.org/pods/com.awareframework.ios.sensor.calls)
 [![License](https://img.shields.io/cocoapods/l/com.awareframework.ios.sensor.calls.svg?style=flat)](https://cocoapods.org/pods/com.awareframework.ios.sensor.calls)
 [![Platform](https://img.shields.io/cocoapods/p/com.awareframework.ios.sensor.calls.svg?style=flat)](https://cocoapods.org/pods/com.awareframework.ios.sensor.calls)
 
-## Example
-
-To run the example project, clone the repo, and run `pod install` from the Example directory first.
+The Calls sensor logs call events performed by or received by the user. It also provides higher level context on the users’ calling availability and actions.
 
 ## Requirements
 iOS 10 or later
@@ -23,7 +21,51 @@ pod 'com.awareframework.ios.sensor.calls'
 import com_awareframework_ios_sensor_calls
 ```
 
-## Example usage
+## Public functions
+
+### CallsSensor
+
+* `init(config:CallsSensor.Config?)` : Initializes the calls sensor with the optional configuration.
+* `start()`: Starts the gyroscope sensor with the optional configuration.
+* `stop()`: Stops the service.
+
+## Broadcasts
+
+### Fired Broadcasts
+
++ `CallsSensor.ACTION_AWARE_CALL_ACCEPTED`: fired when the user accepts an incoming call.
++ `CallsSensor.ACTION_AWARE_CALL_RINGING`: fired when the phone is ringing.
++ `CallsSensor.ACTION_AWARE_CALL_MADE`: fired when the user is making a call.
++ `CallsSensor.ACTION_AWARE_USER_IN_CALL`: fired when the user is currently in a call.
++ `CallsSensor.ACTION_AWARE_USER_NOT_IN_CALL`: fired when the user is not in a call.
+
+### Received Broadcasts
+
++ `CallsSensor.ACTION_AWARE_CALLS_START`: received broadcast to start the sensor.
++ `CallsSensor.ACTION_AWARE_CALLS_STOP`: received broadcast to stop the sensor.
++ `CallsSensor.ACTION_AWARE_CALLS_SYNC`: received broadcast to send sync attempt to the host.
++ `CallsSensor.ACTION_AWARE_CALLS_SET_LABEL`: received broadcast to set the data label. Label is expected in the `CallsSensor.EXTRA_LABEL` field of the intent extras.
+
+## Data Representations
+
+### Call Data
+
+Contains the calls sensor information.
+
+| Field          | Type   | Description                                                     |
+| -------------- | ------ | --------------------------------------------------------------- |
+| eventTimestamp | Long   | unixtime miliseconds of the actual event                        |
+| type           | String | one of call types (dialing, incoming, connected, and disconnected)|
+| attributes     | String | a [call event attibutes](https://developer.apple.com/documentation/callkit/cxcall)|
+| duration       | Int    | length of the call session                                      |
+| trace          | String | source/target of the call                                       |
+| deviceId       | String | AWARE device UUID                                               |
+| label          | String | Customizable label. Useful for data calibration or traceability |
+| timestamp      | Long   | unixtime milliseconds since 1970                                |
+| timezone       | Int    | Timezone of the device                          |
+| os             | String | Operating system of the device (ex. android)                    |
+
+## Example Usage
 ```swift
 let callsSensor = CallsSensor.init(CallsSensor.Config().apply{config in
     config.debug = true
@@ -56,6 +98,9 @@ class Observer:CallsObserver{
 ## Author
 
 Yuuki Nishiyama, tetujin@ht.sfc.keio.ac.jp
+
+## Related Links
+* [ Apple | CXCall ](https://developer.apple.com/documentation/callkit/cxcall)
 
 ## License
 
