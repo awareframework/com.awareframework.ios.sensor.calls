@@ -28,15 +28,15 @@ class ViewController: UIViewController {
         }
         
         func onRinging(number: String?) {
-            print(number)
+            // print(number)
         }
         
         func onBusy(number: String?) {
-            print(number)
+            // print(number)
         }
         
         func onFree(number: String?) {
-            print(number)
+            // print(number)
         }
         
         

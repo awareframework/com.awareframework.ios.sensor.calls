@@ -9,7 +9,7 @@
 Pod::Spec.new do |s|
   s.name             = 'com.awareframework.ios.sensor.calls'
   s.version          = '0.1.1'
-  s.summary          = 'A short description of com.awareframework.ios.sensor.calls.'
+  s.summary          = 'Phone Call sensor module for AWARE Framework'
 
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
@@ -18,7 +18,7 @@ Pod::Spec.new do |s|
 #   * Finally, don't worry about the indent, CocoaPods strips it!
 
   s.description      = <<-DESC
-TODO: Add long description of the pod here.
+The Calls sensor logs call events performed by or received by the user. It also provides higher level context on the users’ calling availability and actions.
                        DESC
 
   s.homepage         = 'https://github.com/awareframework/com.awareframework.ios.sensor.calls'
@@ -30,7 +30,7 @@ TODO: Add long description of the pod here.
 
   s.ios.deployment_target = '10.0'
   
-  s.swift_version = '4.0'
+  s.swift_version = '4.2'
 
   s.source_files = 'com.awareframework.ios.sensor.calls/Classes/**/*'
   

@@ -7,7 +7,6 @@
 
 import UIKit
 import CallKit
-import SwiftyJSON
 import com_awareframework_ios_sensor_core
 
 extension Notification.Name {
@@ -145,7 +144,7 @@ public class CallsSensor: AwareSensor {
             dbPath = "aware_calls"
         }
         
-        public convenience init(_ json:JSON){
+        public convenience init(_ config:Dictionary<String,Any>){
             self.init()
         }
         

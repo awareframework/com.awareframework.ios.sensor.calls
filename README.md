@@ -97,7 +97,7 @@ class Observer:CallsObserver{
 
 ## Author
 
-Yuuki Nishiyama, tetujin@ht.sfc.keio.ac.jp
+Yuuki Nishiyama, yuuki.nishiyama@oulu.fi
 
 ## Related Links
 * [ Apple | CXCall ](https://developer.apple.com/documentation/callkit/cxcall)
