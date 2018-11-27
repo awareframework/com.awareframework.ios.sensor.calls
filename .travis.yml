@@ -6,10 +6,21 @@ before_install:
 - gem install cocoapods
 - pod repo update
 - pod install --project-directory=Example
-
 script:
-  - set -o pipefail && xcodebuild test -enableCodeCoverage YES -workspace Example/com.awareframework.ios.sensor.calls.xcworkspace -scheme com.awareframework.ios.sensor.calls-Example -sdk iphonesimulator12.1 -destination OS=12.1,name="iPhone X" ONLY_ACTIVE_ARCH=NO CODE_SIGNING_REQUIRED=NO -allowProvisioningUpdates | XCPRETTY
-  # - pod lib lint com.awareframework.ios.sensor.calls.podspec --allow-warnings
-
+- set -o pipefail && xcodebuild test -enableCodeCoverage YES -workspace Example/com.awareframework.ios.sensor.calls.xcworkspace
+  -scheme com.awareframework.ios.sensor.calls-Example -sdk iphonesimulator12.1 -destination
+  OS=12.1,name="iPhone X" ONLY_ACTIVE_ARCH=NO CODE_SIGNING_REQUIRED=NO -allowProvisioningUpdates
+  | XCPRETTY
+deploy:
+  provider: script
+  script:
+  - source ~/.rvm/script/rvm
+  - rvm use default
+  - pod trunk push
+  on:
+    tags: true
 after_success:
 - echo 'success!'
+env:
+  global:
+    secure: LK+rrmb7euYkG+GtF/SR0H5020FkjOEJvsH0+6XNUi2AYIT9lL5dy2bKne/eLszhC9sGFpTZawEDT3WvQV6TM5hJLifwQ56wEJ6cQIoQmmZREEJXWs5rCAsbmIczB5hWbfomNs1coAtgP+wnCHL5PtRpmvXh3zUz5wtU3hBg+aDXAN9JTHb2xav2ggTI8DgvgWGgC6XfPXFSxnfaBYPl8fF28Aj4sLKDRHqsojVfRmB9b9nAUxvaL4sv260iig5M6kPXPIOupXnvyuACQBEr3BSSVeVcu1x4W2wnKXYX8z6OJPB6XaYwb00MV0TtWmYUZqljyOqsVu4LxGKF6zNxucuejRH2+uyIRTO0AYW8x6dOfThFmplzJxkQPPJVpj3o5V4H1UZcuKJLIXFQgFJ/CxvcLdg+gnWhpJFwv3VOyvE1K1OkOzFsZ1G3CP9iCyQ8X/RGeI+ycyptSRdGd69E8VEt+vKXAnMdDvSCV/AaSJ0KtUz1WXZTIsohqZDonXqMgCkMwDdVLNmND+toTzz0CFp9OhDHBWTaRVZCykWyDXNcV9bqoq5mxhlkcixouEpQnXnOVxmFPPM4wsJuHcCUptR1rXreTHQr7GBokFnFp668BiojKGzkEkhzNk84IN5dMf2K5P2OHBURm2yhkh7POTKhvQOWd7xiQfkFZXoPuoQ=

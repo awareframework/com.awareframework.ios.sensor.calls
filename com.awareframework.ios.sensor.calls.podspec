@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'com.awareframework.ios.sensor.calls'
-  s.version       = '0.2.0'
+  s.version       = '0.2.1'
   s.summary          = 'A Phone Call sensor module for AWARE Framework'
 
 # This description is used to generate tags and improve search results.
