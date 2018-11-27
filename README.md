@@ -1,4 +1,4 @@
-# Aware Calls
+# AWARE: Calls
 
 [![CI Status](https://img.shields.io/travis/awareframework/com.awareframework.ios.sensor.calls.svg?style=flat)](https://travis-ci.org/awareframework/com.awareframework.ios.sensor.calls)
 [![Version](https://img.shields.io/cocoapods/v/com.awareframework.ios.sensor.calls.svg?style=flat)](https://cocoapods.org/pods/com.awareframework.ios.sensor.calls)

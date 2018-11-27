@@ -13,10 +13,7 @@ script:
   | XCPRETTY
 deploy:
   provider: script
-  script:
-  - source ~/.rvm/script/rvm
-  - rvm use default
-  - pod trunk push
+  script: ./scripts/release.sh
   on:
     tags: true
 after_success:
