@@ -144,10 +144,6 @@ public class CallsSensor: AwareSensor {
             dbPath = "aware_calls"
         }
         
-        public convenience init(_ config:Dictionary<String,Any>){
-            self.init()
-        }
-        
         public func apply(closure:(_ config: CallsSensor.Config) -> Void) -> Self {
             closure(self)
             return self

@@ -26,7 +26,7 @@ import com_awareframework_ios_sensor_calls
 ### CallsSensor
 
 * `init(config:CallsSensor.Config?)` : Initializes the calls sensor with the optional configuration.
-* `start()`: Starts the gyroscope sensor with the optional configuration.
+* `start()`: Starts the calls sensor with the optional configuration.
 * `stop()`: Stops the service.
 
 ## Broadcasts
