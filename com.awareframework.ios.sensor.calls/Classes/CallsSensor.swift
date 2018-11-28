@@ -173,7 +173,7 @@ public class CallsSensor: AwareSensor {
     
     public override func sync(force: Bool = false) {
         if let engine = self.dbEngine {
-            engine.startSync(CallData.TABLE_NAME, DbSyncConfig().apply{config in
+            engine.startSync(CallData.TABLE_NAME, CallData.self, DbSyncConfig().apply{config in
                 config.debug = CONFIG.debug
             })
         }
