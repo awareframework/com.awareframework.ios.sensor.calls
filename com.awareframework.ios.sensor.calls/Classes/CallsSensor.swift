@@ -10,6 +10,7 @@ import CallKit
 import com_awareframework_ios_sensor_core
 
 extension Notification.Name {
+    public static let actionAwareCalls   = Notification.Name(CallsSensor.ACTION_AWARE_CALLS)
     public static let actionAwareCallsStart    = Notification.Name(CallsSensor.ACTION_AWARE_CALLS_START)
     public static let actionAwareCallsStop    = Notification.Name(CallsSensor.ACTION_AWARE_CALLS_STOP)
     public static let actionAwareCallsSync    = Notification.Name(CallsSensor.ACTION_AWARE_CALLS_SYNC)
@@ -33,7 +34,7 @@ public protocol CallsObserver {
      *
      * @param data
      */
-    func onCall(data: CallData)
+    func onCall(data: CallsData)
     
     /**
      * Callback when the phone is ringing
@@ -109,23 +110,23 @@ public class CallsSensor: AwareSensor {
      */
     public static var ACTION_AWARE_USER_NOT_IN_CALL = "ACTION_AWARE_USER_NOT_IN_CALL"
     
-    public static var ACTION_AWARE_CALLS_START = "com.awareframework.android.sensor.calls.SENSOR_START"
-    public static var ACTION_AWARE_CALLS_STOP = "com.awareframework.android.sensor.calls.SENSOR_STOP"
+    public static var ACTION_AWARE_CALLS = "com.awareframework.ios.sensor.calls"
+    public static var ACTION_AWARE_CALLS_START = "com.awareframework.ios.sensor.calls.SENSOR_START"
+    public static var ACTION_AWARE_CALLS_STOP = "com.awareframework.ios.sensor.calls.SENSOR_STOP"
     
-    public static var ACTION_AWARE_CALLS_SET_LABEL = "com.awareframework.android.sensor.calls.SET_LABEL"
+    public static var ACTION_AWARE_CALLS_SET_LABEL = "com.awareframework.ios.sensor.calls.SET_LABEL"
     public static var EXTRA_LABEL = "label"
     
-    public static var ACTION_AWARE_CALLS_SYNC = "com.awareframework.android.sensor.calls.SENSOR_SYNC"
+    public static var ACTION_AWARE_CALLS_SYNC = "com.awareframework.ios.sensor.calls.SENSOR_SYNC"
     
-    public class CallEventType{
-        public static let INCOMING_TYPE  = 1
-        public static let OUTGOING_TYPE  = 2
-        /// unsupported event types on iOS  ///
-        public static let MISSED_TYPE    = 3
-        public static let VOICEMAIL_TYPE = 4
-        public static let REJECTED_TYPE  = 5
-        public static let BLOCKED_TYPE   = 6
-        public static let ANSWERED_EXTERNALLY_TYPE = 7
+    public enum CallEventType: Int {
+        case incoming  = 1
+        case outgoing  = 2
+        case missed    = 3
+        case voiceMail = 4
+        case rejected  = 5
+        case blocked   = 6
+        case answeredExternally = 7
     }
     
     public var CONFIG = Config()
@@ -164,19 +165,31 @@ public class CallsSensor: AwareSensor {
         if callObserver == nil {
             callObserver = CXCallObserver()
             callObserver!.setDelegate(self, queue: nil)
+            self.notificationCenter.post(name: .actionAwareCallsStart, object: nil)
         }
     }
     
     public override func stop() {
-        callObserver = nil
+        if callObserver != nil {
+            callObserver = nil
+            self.notificationCenter.post(name: .actionAwareCallsStop, object: nil)
+        }
     }
     
     public override func sync(force: Bool = false) {
         if let engine = self.dbEngine {
-            engine.startSync(CallData.TABLE_NAME, CallData.self, DbSyncConfig().apply{config in
+            engine.startSync(CallsData.TABLE_NAME, CallsData.self, DbSyncConfig().apply{config in
                 config.debug = CONFIG.debug
             })
+            self.notificationCenter.post(name: .actionAwareCallsSync, object: nil)
         }
+    }
+    
+    public func set(label:String){
+        self.CONFIG.label = label
+        self.notificationCenter.post(name: .actionAwareCallsSetLabel,
+                                     object: nil,
+                                     userInfo: [CallsSensor.EXTRA_LABEL:label])
     }
 }
 
@@ -192,6 +205,7 @@ public class CallsSensor: AwareSensor {
 
 extension CallsSensor: CXCallObserverDelegate {
     /**
+     * http://www.yuukinishiyama.com/2018/10/25/handling-phone-call-events-on-ios-using-swift-4/
      * https://stackoverflow.com/questions/36014975/detect-phone-calls-on-ios-with-ctcallcenter-swift
      */
     public func callObserver(_ callObserver: CXCallObserver, callChanged call: CXCall) {
@@ -203,8 +217,7 @@ extension CallsSensor: CXCallObserverDelegate {
                 observer.onFree(number: call.uuid.uuidString)
             }
             self.notificationCenter.post(name: .actionAwareCallUserNoInCall, object: nil)
-            self.saveCallEvent(call)
-
+            self.save(call:call)
         }
 
         if call.isOutgoing == true && call.hasConnected == false && call.hasEnded == false {
@@ -213,7 +226,7 @@ extension CallsSensor: CXCallObserverDelegate {
                 observer.onRinging(number: call.uuid.uuidString)
             }
             self.notificationCenter.post(name: .actionAwareCallMade, object: nil)
-            lastCallEventType = CallEventType.OUTGOING_TYPE
+            lastCallEventType = CallEventType.outgoing.rawValue
         }
         
         if call.isOutgoing == false && call.hasConnected == false && call.hasEnded == false {
@@ -222,7 +235,7 @@ extension CallsSensor: CXCallObserverDelegate {
                 observer.onRinging(number: call.uuid.uuidString)
             }
             self.notificationCenter.post(name: .actionAwareCallRinging, object: nil)
-            lastCallEventType = CallEventType.INCOMING_TYPE
+            lastCallEventType = CallEventType.incoming.rawValue
         }
         
         if call.hasConnected == true && call.hasEnded == false {
@@ -235,37 +248,36 @@ extension CallsSensor: CXCallObserverDelegate {
             lastCallEvent = call
             lastCallEventTime = Date()
             if call.isOutgoing {
-                lastCallEventType = CallEventType.OUTGOING_TYPE
+                lastCallEventType = CallEventType.outgoing.rawValue
             }else{
-                lastCallEventType = CallEventType.INCOMING_TYPE
+                lastCallEventType = CallEventType.incoming.rawValue
             }
         }
     }
     
-    public func saveCallEvent(_ call:CXCall){
+    public func save(call:CXCall){
         if let uwLastCallEvent = self.lastCallEvent,
            let uwLastCallEventTime = self.lastCallEventTime,
            let uwLastCallEventType = self.lastCallEventType{
             let now = Date()
-            let data = CallData()
+            let data = CallsData()
             data.trace = uwLastCallEvent.uuid.uuidString
             data.eventTimestamp = Int64( now.timeIntervalSince1970*1000 )
             data.duration = Int64(now.timeIntervalSince1970 - uwLastCallEventTime.timeIntervalSince1970)
             data.type = uwLastCallEventType
             if let engine = self.dbEngine {
-                engine.save(data, CallData.TABLE_NAME)
+                engine.save(data, CallsData.TABLE_NAME)
             }
             if let observer = self.CONFIG.sensorObserver {
                 observer.onCall(data: data)
             }
+            self.notificationCenter.post(name: .actionAwareCalls, object: nil)
             // data.type = eventType
             self.lastCallEvent = nil
             lastCallEventTime = nil
             lastCallEventType = nil
         }
     }
-    
-
 }
 
 //func onCall(data: CallData)

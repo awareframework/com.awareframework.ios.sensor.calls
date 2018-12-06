@@ -23,7 +23,7 @@ class ViewController: UIViewController {
     }
     
     class Observer: CallsObserver{
-        func onCall(data: CallData) {
+        func onCall(data: CallsData) {
             print(data)
         }
         
