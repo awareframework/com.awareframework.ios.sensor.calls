@@ -14,6 +14,7 @@ extension Notification.Name {
     public static let actionAwareCallsStart    = Notification.Name(CallsSensor.ACTION_AWARE_CALLS_START)
     public static let actionAwareCallsStop    = Notification.Name(CallsSensor.ACTION_AWARE_CALLS_STOP)
     public static let actionAwareCallsSync    = Notification.Name(CallsSensor.ACTION_AWARE_CALLS_SYNC)
+    public static let actionAwareCallsSyncCompletion = Notification.Name(CallsSensor.ACTION_AWARE_CALLS_SYNC_COMPLETION)
     public static let actionAwareCallsSetLabel = Notification.Name(CallsSensor.ACTION_AWARE_CALLS_SET_LABEL)
     
     // TODO: check all of actions
@@ -60,64 +61,67 @@ public protocol CallsObserver {
 
 public class CallsSensor: AwareSensor {
 
-    public static var TAG = "AWARE::Calls"
+    public static let TAG = "AWARE::Calls"
     
     /**
      * Fired event: call accepted by the user
      */
-    public static var ACTION_AWARE_CALL_ACCEPTED = "ACTION_AWARE_CALL_ACCEPTED"
+    public static let ACTION_AWARE_CALL_ACCEPTED = "ACTION_AWARE_CALL_ACCEPTED"
     
     /**
      * Fired event: phone is ringing
      */
-    public static var ACTION_AWARE_CALL_RINGING = "ACTION_AWARE_CALL_RINGING"
+    public static let ACTION_AWARE_CALL_RINGING = "ACTION_AWARE_CALL_RINGING"
     
     /**
      * Fired event: call unanswered
      */
-    public static var ACTION_AWARE_CALL_MISSED = "ACTION_AWARE_CALL_MISSED"
+    public static let ACTION_AWARE_CALL_MISSED = "ACTION_AWARE_CALL_MISSED"
     
     /**
      * Fired event: call got voice mailed.
      * Only available after SDK 21
      */
-    public static var ACTION_AWARE_CALL_VOICE_MAILED = "ACTION_AWARE_CALL_VOICE_MAILED"
+    public static let ACTION_AWARE_CALL_VOICE_MAILED = "ACTION_AWARE_CALL_VOICE_MAILED"
     
     /**
      * Fired event: call got rejected by the callee
      * Only available after SDK 24
      */
-    public static var ACTION_AWARE_CALL_REJECTED = "ACTION_AWARE_CALL_REJECTED"
+    public static let ACTION_AWARE_CALL_REJECTED = "ACTION_AWARE_CALL_REJECTED"
     
     /**
      * Fired event: call got blocked.
      * Only available after SDK 24
      */
-    public static var ACTION_AWARE_CALL_BLOCKED = "ACTION_AWARE_CALL_BLOCKED"
+    public static let ACTION_AWARE_CALL_BLOCKED = "ACTION_AWARE_CALL_BLOCKED"
     
     /**
      * Fired event: call attempt by the user
      */
-    public static var ACTION_AWARE_CALL_MADE = "ACTION_AWARE_CALL_MADE"
+    public static let ACTION_AWARE_CALL_MADE = "ACTION_AWARE_CALL_MADE"
     
     /**
      * Fired event: user IS in a call at the moment
      */
-    public static var ACTION_AWARE_USER_IN_CALL = "ACTION_AWARE_USER_IN_CALL"
+    public static let ACTION_AWARE_USER_IN_CALL = "ACTION_AWARE_USER_IN_CALL"
     
     /**
      * Fired event: user is NOT in a call
      */
-    public static var ACTION_AWARE_USER_NOT_IN_CALL = "ACTION_AWARE_USER_NOT_IN_CALL"
+    public static let ACTION_AWARE_USER_NOT_IN_CALL = "ACTION_AWARE_USER_NOT_IN_CALL"
     
-    public static var ACTION_AWARE_CALLS = "com.awareframework.ios.sensor.calls"
-    public static var ACTION_AWARE_CALLS_START = "com.awareframework.ios.sensor.calls.SENSOR_START"
-    public static var ACTION_AWARE_CALLS_STOP = "com.awareframework.ios.sensor.calls.SENSOR_STOP"
+    public static let ACTION_AWARE_CALLS = "com.awareframework.ios.sensor.calls"
+    public static let ACTION_AWARE_CALLS_START = "com.awareframework.ios.sensor.calls.SENSOR_START"
+    public static let ACTION_AWARE_CALLS_STOP = "com.awareframework.ios.sensor.calls.SENSOR_STOP"
     
-    public static var ACTION_AWARE_CALLS_SET_LABEL = "com.awareframework.ios.sensor.calls.SET_LABEL"
-    public static var EXTRA_LABEL = "label"
+    public static let ACTION_AWARE_CALLS_SET_LABEL = "com.awareframework.ios.sensor.calls.SET_LABEL"
+    public static let EXTRA_LABEL = "label"
     
-    public static var ACTION_AWARE_CALLS_SYNC = "com.awareframework.ios.sensor.calls.SENSOR_SYNC"
+    public static let ACTION_AWARE_CALLS_SYNC = "com.awareframework.ios.sensor.calls.SENSOR_SYNC"
+    public static let ACTION_AWARE_CALLS_SYNC_COMPLETION = "com.awareframework.ios.sensor.calls.SENSOR_SYNC_COMPLETION"
+    public static let EXTRA_STATUS = "status"
+    public static let EXTRA_ERROR = "error"
     
     public enum CallEventType: Int {
         case incoming  = 1
@@ -165,14 +169,14 @@ public class CallsSensor: AwareSensor {
         if callObserver == nil {
             callObserver = CXCallObserver()
             callObserver!.setDelegate(self, queue: nil)
-            self.notificationCenter.post(name: .actionAwareCallsStart, object: nil)
+            self.notificationCenter.post(name: .actionAwareCallsStart, object: self)
         }
     }
     
     public override func stop() {
         if callObserver != nil {
             callObserver = nil
-            self.notificationCenter.post(name: .actionAwareCallsStop, object: nil)
+            self.notificationCenter.post(name: .actionAwareCallsStop, object: self)
         }
     }
     
@@ -180,15 +184,26 @@ public class CallsSensor: AwareSensor {
         if let engine = self.dbEngine {
             engine.startSync(CallsData.TABLE_NAME, CallsData.self, DbSyncConfig().apply{config in
                 config.debug = CONFIG.debug
+                config.debug = self.CONFIG.debug
+                config.dispatchQueue = DispatchQueue(label: "com.awareframework.ios.sensor.calls.sync.queue")
+                config.completionHandler = { (status, error) in
+                    var userInfo: Dictionary<String,Any> = ["status":status]
+                    if let e = error {
+                        userInfo["error"] = e
+                    }
+                    self.notificationCenter.post(name: .actionAwareCallsSyncCompletion,
+                                                 object: self,
+                                                 userInfo:userInfo)
+                }
             })
-            self.notificationCenter.post(name: .actionAwareCallsSync, object: nil)
+            self.notificationCenter.post(name: .actionAwareCallsSync, object: self)
         }
     }
     
-    public func set(label:String){
+    public override func set(label:String){
         self.CONFIG.label = label
         self.notificationCenter.post(name: .actionAwareCallsSetLabel,
-                                     object: nil,
+                                     object: self,
                                      userInfo: [CallsSensor.EXTRA_LABEL:label])
     }
 }
@@ -216,7 +231,7 @@ extension CallsSensor: CXCallObserverDelegate {
             if let observer = self.CONFIG.sensorObserver{
                 observer.onFree(number: call.uuid.uuidString)
             }
-            self.notificationCenter.post(name: .actionAwareCallUserNoInCall, object: nil)
+            self.notificationCenter.post(name: .actionAwareCallUserNoInCall, object: self)
             self.save(call:call)
         }
 
@@ -225,7 +240,7 @@ extension CallsSensor: CXCallObserverDelegate {
             if let observer = self.CONFIG.sensorObserver{
                 observer.onRinging(number: call.uuid.uuidString)
             }
-            self.notificationCenter.post(name: .actionAwareCallMade, object: nil)
+            self.notificationCenter.post(name: .actionAwareCallMade, object: self)
             lastCallEventType = CallEventType.outgoing.rawValue
         }
         
@@ -234,7 +249,7 @@ extension CallsSensor: CXCallObserverDelegate {
             if let observer = self.CONFIG.sensorObserver{
                 observer.onRinging(number: call.uuid.uuidString)
             }
-            self.notificationCenter.post(name: .actionAwareCallRinging, object: nil)
+            self.notificationCenter.post(name: .actionAwareCallRinging, object: self)
             lastCallEventType = CallEventType.incoming.rawValue
         }
         
@@ -243,8 +258,8 @@ extension CallsSensor: CXCallObserverDelegate {
             if let observer = self.CONFIG.sensorObserver{
                 observer.onBusy(number: call.uuid.uuidString)
             }
-            self.notificationCenter.post(name: .actionAwareCallAccepted, object: nil)
-            self.notificationCenter.post(name: .actionAwareCallUserInCall, object: nil)
+            self.notificationCenter.post(name: .actionAwareCallAccepted, object: self)
+            self.notificationCenter.post(name: .actionAwareCallUserInCall, object: self)
             lastCallEvent = call
             lastCallEventTime = Date()
             if call.isOutgoing {
@@ -266,12 +281,12 @@ extension CallsSensor: CXCallObserverDelegate {
             data.duration = Int64(now.timeIntervalSince1970 - uwLastCallEventTime.timeIntervalSince1970)
             data.type = uwLastCallEventType
             if let engine = self.dbEngine {
-                engine.save(data, CallsData.TABLE_NAME)
+                engine.save(data)
             }
             if let observer = self.CONFIG.sensorObserver {
                 observer.onCall(data: data)
             }
-            self.notificationCenter.post(name: .actionAwareCalls, object: nil)
+            self.notificationCenter.post(name: .actionAwareCalls, object: self)
             // data.type = eventType
             self.lastCallEvent = nil
             lastCallEventTime = nil
