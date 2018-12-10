@@ -280,6 +280,7 @@ extension CallsSensor: CXCallObserverDelegate {
             data.eventTimestamp = Int64( now.timeIntervalSince1970*1000 )
             data.duration = Int64(now.timeIntervalSince1970 - uwLastCallEventTime.timeIntervalSince1970)
             data.type = uwLastCallEventType
+            data.label = self.CONFIG.label
             if let engine = self.dbEngine {
                 engine.save(data)
             }
