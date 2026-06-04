@@ -10,7 +10,7 @@ iOS 13 or later
 
 ## Installation
 
-You can integrate this framework into your project via Swift Package Manager (SwiftPM) or CocoaPods.
+You can integrate this framework into your project via Swift Package Manager (SwiftPM).
 
 ### SwiftPM
 1. Open Package Manager Windows
@@ -22,16 +22,6 @@ You can integrate this framework into your project via Swift Package Manager (Sw
 3. Import the package into your target.
 
 4. Import com.awareframework.ios.sensor.calls library into your source code.
-```swift
-import com_awareframework_ios_sensor_calls
-```
-
-### CocoaPods
-1. com.awareframework.ios.sensor.calls is available through [CocoaPods](https://cocoapods.org).  To install it, simply add the following line to your Podfile:
-```ruby
-pod 'com.awareframework.ios.sensor.calls'
-```
-2. Import com.awareframework.ios.sensor.calls library into your source code.
 ```swift
 import com_awareframework_ios_sensor_calls
 ```

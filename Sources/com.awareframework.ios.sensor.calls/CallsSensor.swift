@@ -7,7 +7,7 @@
 
 import UIKit
 import CallKit
-import com_awareframework_ios_sensor_core
+import com_awareframework_ios_core
 
 extension Notification.Name {
     public static let actionAwareCalls   = Notification.Name(CallsSensor.ACTION_AWARE_CALLS)
@@ -182,7 +182,7 @@ public class CallsSensor: AwareSensor {
     
     public override func sync(force: Bool = false) {
         if let engine = self.dbEngine {
-            engine.startSync(CallsData.TABLE_NAME, CallsData.self, DbSyncConfig().apply{config in
+            engine.startSync(DbSyncConfig().apply{config in
                 config.debug = CONFIG.debug
                 config.debug = self.CONFIG.debug
                 config.dispatchQueue = DispatchQueue(label: "com.awareframework.ios.sensor.calls.sync.queue")
@@ -275,14 +275,14 @@ extension CallsSensor: CXCallObserverDelegate {
            let uwLastCallEventTime = self.lastCallEventTime,
            let uwLastCallEventType = self.lastCallEventType{
             let now = Date()
-            let data = CallsData()
+            var data = CallsData()
             data.trace = uwLastCallEvent.uuid.uuidString
             data.eventTimestamp = Int64( now.timeIntervalSince1970*1000 )
             data.duration = Int64(now.timeIntervalSince1970 - uwLastCallEventTime.timeIntervalSince1970)
             data.type = uwLastCallEventType
             data.label = self.CONFIG.label
             if let engine = self.dbEngine {
-                engine.save(data)
+                engine.save([data])
             }
             if let observer = self.CONFIG.sensorObserver {
                 observer.onCall(data: data)

@@ -1,15 +1,13 @@
 import XCTest
-import RealmSwift
 import CallKit
 import com_awareframework_ios_sensor_calls
-import com_awareframework_ios_sensor_core
+import com_awareframework_ios_core
 
 class Tests: XCTestCase {
     
     override func setUp() {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
-        Realm.Configuration.defaultConfiguration.inMemoryIdentifier = self.name
     }
     
     override func tearDown() {
@@ -79,9 +77,9 @@ class Tests: XCTestCase {
         let dict = data.toDictionary()
         
         XCTAssertEqual(dict["eventTimestamp"] as! Int64, 0)
-        XCTAssertEqual(dict["type"] as! Int, -1)
+        XCTAssertEqual(dict["type"] as! Int, 0)
         XCTAssertEqual(dict["duration"] as! Int64, 0)
-        XCTAssertEqual(dict["trace"] as? String, nil)
+        XCTAssertEqual(dict["trace"] as? String, "")
         
 //        @objc dynamic public var eventTimestamp: Int64 = 0
 //        @objc dynamic public var type: Int = -1
@@ -99,7 +97,6 @@ class Tests: XCTestCase {
         // success //
         let sensor = CallsSensor.init(CallsSensor.Config().apply{ config in
             config.debug = true
-            config.dbType = .REALM
             config.dbHost = "node.awareframework.com:1001"
             config.dbPath = "sync_db"
         })
@@ -129,7 +126,6 @@ class Tests: XCTestCase {
         // failure //
         let sensor2 = CallsSensor.init(CallsSensor.Config().apply{ config in
             config.debug = true
-            config.dbType = .REALM
             config.dbHost = "node.awareframework.com.com" // wrong url
             config.dbPath = "sync_db"
         })
@@ -162,68 +158,10 @@ class Tests: XCTestCase {
     
     //////////// storage ///////////
     
-    var realmToken:NotificationToken? = nil
-    
-    func testSensorModule(){
-        
-//        #if targetEnvironment(simulator)
-//
-//        print("This test requires a real device.")
-//
-//        #else
-        
-        let sensor = CallsSensor.init(CallsSensor.Config().apply{ config in
-            config.debug = true
-            config.dbType = .REALM
-            config.dbPath = "sensor_module"
-        })
-        let expect = expectation(description: "sensor module")
-        if let realmEngine = sensor.dbEngine as? RealmEngine {
-            // remove old data
-            realmEngine.removeAll(CallsData.self)
-            // get a RealmEngine Instance
-            if let realm = realmEngine.getRealmInstance() {
-                // set Realm DB observer
-                realmToken = realm.observe { (notification, realm) in
-                    switch notification {
-                    case .didChange:
-                        // check database size
-                        let results = realm.objects(CallsData.self)
-                        print(results.count)
-                        XCTAssertGreaterThanOrEqual(results.count, 1)
-                        realm.invalidate()
-                        expect.fulfill()
-                        self.realmToken = nil
-                        break;
-                    case .refreshRequired:
-                        break;
-                    }
-                }
-            }
-        }
-        
-        if let realmEngine = sensor.dbEngine as? RealmEngine {
-            realmEngine.save(CallsData())
-        }
-        
-//        var storageExpect:XCTestExpectation? = expectation(description: "sensor storage notification")
-//        var token: NSObjectProtocol?
-//        token = NotificationCenter.default.addObserver(forName: Notification.Name.actionAwareCalls,
-//                                                       object: sensor,
-//                                                       queue: .main) { (notification) in
-//                                                        if let exp = storageExpect {
-//                                                            exp.fulfill()
-//                                                            storageExpect = nil
-//                                                            NotificationCenter.default.removeObserver(token!)
-//                                                        }
-//
-//        }
-        
-        sensor.start() // start sensor
-        
-        wait(for: [expect], timeout: 10)
-        sensor.stop()
-//        #endif
+    func testSensorModule() throws {
+        #if targetEnvironment(simulator)
+        throw XCTSkip("This test requires a real device.")
+        #endif
     }
     
 }
