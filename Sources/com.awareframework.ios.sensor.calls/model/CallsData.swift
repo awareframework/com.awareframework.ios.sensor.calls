@@ -10,7 +10,7 @@ public struct CallsData: BaseDbModelSQLite {
     public var timezone: Int = AwareUtils.getTimeZone()
     public var os: String = "iOS"
     public var jsonVersion: Int = 1
-    public static let databaseTableName = "callsData"
+    public static let databaseTableName = "ios_calls"
 
     public var eventTimestamp: Int64 = 0
     public var type: Int = 0

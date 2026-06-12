@@ -100,12 +100,6 @@ class Tests: XCTestCase {
             config.dbHost = "node.awareframework.com:1001"
             config.dbPath = "sync_db"
         })
-        if let engine = sensor.dbEngine as? RealmEngine {
-            engine.removeAll(CallsData.self)
-            for _ in 0..<100 {
-                engine.save(CallsData())
-            }
-        }
         let successExpectation = XCTestExpectation(description: "success sync")
         let observer = NotificationCenter.default.addObserver(forName: Notification.Name.actionAwareCallsSyncCompletion,
                                                               object: sensor, queue: .main) { (notification) in
@@ -139,12 +133,6 @@ class Tests: XCTestCase {
                                                                                 }
                                                                             }
                                                                         }
-        }
-        if let engine = sensor2.dbEngine as? RealmEngine {
-            engine.removeAll(CallsData.self)
-            for _ in 0..<100 {
-                engine.save(CallsData())
-            }
         }
         sensor2.sync(force: true)
         wait(for: [failureExpectation], timeout: 20)

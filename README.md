@@ -75,23 +75,22 @@ Contains the calls sensor information.
 
 | Field          | Type   | Description                                                     |
 | -------------- | ------ | --------------------------------------------------------------- |
-| eventTimestamp | Long   | unixtime miliseconds of the actual event                        |
-| type           | String | one of call types (dialing, incoming, connected, and disconnected)|
-| attributes     | String | a [call event attibutes](https://developer.apple.com/documentation/callkit/cxcall)|
-| duration       | Int    | length of the call session                                      |
+| eventTimestamp | Int64  | unixtime milliseconds of the actual event                       |
+| type           | Int    | one of call types (dialing, incoming, connected, and disconnected)|
+| duration       | Int64  | length of the call session in milliseconds                      |
 | trace          | String | source/target of the call                                       |
 | deviceId       | String | AWARE device UUID                                               |
 | label          | String | Customizable label. Useful for data calibration or traceability |
-| timestamp      | Long   | unixtime milliseconds since 1970                                |
-| timezone       | Int    | Timezone of the device                          |
-| os             | String | Operating system of the device (ex. android)                    |
+| timestamp      | Int64  | unixtime milliseconds since 1970                                |
+| timezone       | Int    | Timezone of the device                                          |
+| os             | String | Operating system of the device (ex. ios)                        |
+| jsonVersion    | Int    | JSON schema version                                             |
 
 ## Example Usage
 ```swift
 let callsSensor = CallsSensor.init(CallsSensor.Config().apply{config in
     config.debug = true
     config.sensorObserver = Observer()
-    config.dbType = .REALM
 })
 callsSensor?.start()
 callsSensor?.stop()

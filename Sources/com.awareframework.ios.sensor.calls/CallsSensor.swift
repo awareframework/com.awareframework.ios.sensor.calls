@@ -163,6 +163,9 @@ public class CallsSensor: AwareSensor {
         super.init()
         CONFIG = config
         initializeDbEngine(config: config)
+        super.syncConfig = DbSyncConfig().apply { c in
+            c.dispatchQueue = DispatchQueue(label: "com.awareframework.ios.sensor.calls.sync.queue")
+        }
     }
     
     public override func start() {
@@ -181,23 +184,15 @@ public class CallsSensor: AwareSensor {
     }
     
     public override func sync(force: Bool = false) {
-        if let engine = self.dbEngine {
-            engine.startSync(DbSyncConfig().apply{config in
-                config.debug = CONFIG.debug
-                config.debug = self.CONFIG.debug
-                config.dispatchQueue = DispatchQueue(label: "com.awareframework.ios.sensor.calls.sync.queue")
-                config.completionHandler = { (status, error) in
-                    var userInfo: Dictionary<String,Any> = ["status":status]
-                    if let e = error {
-                        userInfo["error"] = e
-                    }
-                    self.notificationCenter.post(name: .actionAwareCallsSyncCompletion,
-                                                 object: self,
-                                                 userInfo:userInfo)
-                }
-            })
-            self.notificationCenter.post(name: .actionAwareCallsSync, object: self)
+        guard let engine = self.dbEngine, let syncConfig = self.syncConfig else { return }
+        syncConfig.debug = self.CONFIG.debug
+        syncConfig.completionHandler = { (status, error) in
+            var userInfo: Dictionary<String,Any> = ["status": status]
+            if let e = error { userInfo["error"] = e }
+            self.notificationCenter.post(name: .actionAwareCallsSyncCompletion, object: self, userInfo: userInfo)
         }
+        engine.startSync(syncConfig)
+        self.notificationCenter.post(name: .actionAwareCallsSync, object: self)
     }
     
     public override func set(label:String){
