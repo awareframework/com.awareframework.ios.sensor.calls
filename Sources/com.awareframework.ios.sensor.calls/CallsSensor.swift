@@ -227,7 +227,7 @@ extension CallsSensor: CXCallObserverDelegate {
                 observer.onFree(number: call.uuid.uuidString)
             }
             self.notificationCenter.post(name: .actionAwareCallUserNoInCall, object: self)
-            self.save(call:call)
+            self.save(call: call)
         }
 
         if call.isOutgoing == true && call.hasConnected == false && call.hasEnded == false {
@@ -237,6 +237,7 @@ extension CallsSensor: CXCallObserverDelegate {
             }
             self.notificationCenter.post(name: .actionAwareCallMade, object: self)
             lastCallEventType = CallEventType.outgoing.rawValue
+            self.save(call: call, type: CallEventType.outgoing.rawValue, duration: 0, resetState: false)
         }
         
         if call.isOutgoing == false && call.hasConnected == false && call.hasEnded == false {
@@ -246,6 +247,7 @@ extension CallsSensor: CXCallObserverDelegate {
             }
             self.notificationCenter.post(name: .actionAwareCallRinging, object: self)
             lastCallEventType = CallEventType.incoming.rawValue
+            self.save(call: call, type: CallEventType.incoming.rawValue, duration: 0, resetState: false)
         }
         
         if call.hasConnected == true && call.hasEnded == false {
@@ -262,31 +264,57 @@ extension CallsSensor: CXCallObserverDelegate {
             }else{
                 lastCallEventType = CallEventType.incoming.rawValue
             }
+            self.save(call: call, type: lastCallEventType ?? CallEventType.incoming.rawValue, duration: 0, resetState: false)
         }
     }
     
-    public func save(call:CXCall){
-        if let uwLastCallEvent = self.lastCallEvent,
-           let uwLastCallEventTime = self.lastCallEventTime,
-           let uwLastCallEventType = self.lastCallEventType{
-            let now = Date()
-            var data = CallsData()
-            data.trace = uwLastCallEvent.uuid.uuidString
-            data.eventTimestamp = Int64( now.timeIntervalSince1970*1000 )
-            data.duration = Int64(now.timeIntervalSince1970 - uwLastCallEventTime.timeIntervalSince1970)
-            data.type = uwLastCallEventType
-            data.label = self.CONFIG.label
-            if let engine = self.dbEngine {
-                engine.save([data])
-            }
-            if let observer = self.CONFIG.sensorObserver {
-                observer.onCall(data: data)
-            }
-            self.notificationCenter.post(name: .actionAwareCalls, object: self)
-            // data.type = eventType
+    public func save(call: CXCall) {
+        let now = Date()
+        let eventType: Int
+        let duration: Int64
+
+        if let connectedAt = self.lastCallEventTime,
+           let connectedType = self.lastCallEventType {
+            eventType = connectedType
+            duration = Int64(now.timeIntervalSince(connectedAt))
+        } else if call.isOutgoing {
+            eventType = CallEventType.outgoing.rawValue
+            duration = 0
+        } else {
+            eventType = CallEventType.missed.rawValue
+            duration = 0
+        }
+
+        self.save(call: call, type: eventType, duration: duration, timestamp: now, resetState: true)
+    }
+
+    private func save(
+        call: CXCall,
+        type eventType: Int,
+        duration: Int64,
+        timestamp now: Date = Date(),
+        resetState: Bool
+    ) {
+        var data = CallsData()
+        data.timestamp = Int64(now.timeIntervalSince1970 * 1000)
+        data.trace = call.uuid.uuidString
+        data.eventTimestamp = data.timestamp
+        data.duration = duration
+        data.type = eventType
+        data.label = self.CONFIG.label
+
+        if let engine = self.dbEngine {
+            engine.save([data])
+        }
+        if let observer = self.CONFIG.sensorObserver {
+            observer.onCall(data: data)
+        }
+        self.notificationCenter.post(name: .actionAwareCalls, object: self)
+
+        if resetState {
             self.lastCallEvent = nil
-            lastCallEventTime = nil
-            lastCallEventType = nil
+            self.lastCallEventTime = nil
+            self.lastCallEventType = nil
         }
     }
 }
