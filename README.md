@@ -14,7 +14,7 @@ You can integrate this framework into your project via Swift Package Manager (Sw
 
 ### SwiftPM
 1. Open Package Manager Windows
-    * Open `Xcode` -> Select `Menu Bar` -> `File` -> `App Package Dependencies...` 
+    * Open `Xcode` -> Select `Menu Bar` -> `File` -> `App Package Dependencies...`
 
 2. Find the package using the manager
     * Select `Search Package URL` and type `git@github.com:awareframework/com.awareframework.ios.sensor.calls.git`
@@ -26,13 +26,13 @@ You can integrate this framework into your project via Swift Package Manager (Sw
 import com_awareframework_ios_sensor_calls
 ```
 
-## Public functions
+## Public Functions
 
 ### CallsSensor
 
-* `init(config:CallsSensor.Config?)` : Initializes the calls sensor with the optional configuration.
-* `start()`: Starts the calls sensor with the optional configuration.
-* `stop()`: Stops the service.
++ `init(config:CallsSensor.Config?)`: Initializes the calls sensor with the optional configuration.
++ `start()`: Starts the calls sensor with the optional configuration.
++ `stop()`: Stops the service.
 
 ### CallsConfig
 
@@ -41,14 +41,14 @@ Class to hold the configuration of the sensor.
 #### Fields
 
 + `sensorObserver: CallsObserver`: Callback for live data updates.
-+ `enabled: Boolean` Sensor is enabled or not. (default = `false`)
-+ `debug: Boolean` enable/disable logging to `Logcat`. (default = `false`)
-+ `label: String` Label for the data. (default = "")
-+ `deviceId: String` Id of the device that will be associated with the events and the sensor. (default = "")
-+ `dbEncryptionKey` Encryption key for the database. (default = `null`)
-+ `dbType: Engine` Which db engine to use for saving data. (default = `Engine.DatabaseType.NONE`)
-+ `dbPath: String` Path of the database. (default = "aware_calls")
-+ `dbHost: String` Host for syncing the database. (default = `null`)
++ `enabled: Bool`: Sensor is enabled or not. (default = `false`)
++ `debug: Bool`: Enable/disable logging. (default = `false`)
++ `label: String`: Label for the data. (default = `""`)
++ `deviceId: String`: Id of the device that will be associated with the events and the sensor. (default = `""`)
++ `dbEncryptionKey: String?`: Encryption key for the database. (default = `nil`)
++ `dbType: DatabaseType`: Which db engine to use for saving data. (default = `.none`)
++ `dbPath: String`: Path of the database. (default = `"aware_calls"`)
++ `dbHost: String?`: Host for syncing the database. (default = `nil`)
 
 ## Broadcasts
 
@@ -88,7 +88,7 @@ Contains the calls sensor information.
 
 ## Example Usage
 ```swift
-let callsSensor = CallsSensor.init(CallsSensor.Config().apply{config in
+let callsSensor = CallsSensor.init(CallsSensor.Config().apply { config in
     config.debug = true
     config.sensorObserver = Observer()
 })
@@ -117,7 +117,7 @@ class Observer:CallsObserver{
 
 ## Author
 
-Yuuki Nishiyama (The University of Tokyo), nishiyama@csis.u-tokyo.ac.jp 
+Yuuki Nishiyama (The University of Tokyo), nishiyama@csis.u-tokyo.ac.jp
 
 ## Related Links
 * [ Apple | CXCall ](https://developer.apple.com/documentation/callkit/cxcall)
