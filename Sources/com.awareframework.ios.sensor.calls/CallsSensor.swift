@@ -146,6 +146,7 @@ public class CallsSensor: AwareSensor {
         
         public override init(){
             super.init()
+            dbTableName = CallsData.databaseTableName
             dbPath = "aware_calls"
         }
         
@@ -159,10 +160,32 @@ public class CallsSensor: AwareSensor {
         self.init(CallsSensor.Config())
     }
     
+
+    /// Creates this sensor's table if it does not exist yet, so that the first save does not fail.
+    /// Failures are logged: without the table, the data cannot be saved or uploaded.
+    private func initializeTables() {
+        guard CONFIG.dbType == .sqlite else { return }
+        guard let queue = (dbEngine as? SQLiteEngine)?.getSQLiteInstance() else {
+            print(CallsSensor.TAG, "[Error] Cannot open the database '\(CONFIG.dbPath)'. The table is not created.")
+            return
+        }
+        let tables: [(name: String, create: () throws -> Void)] = [
+            (CallsData.databaseTableName, { try CallsData.createTable(queue: queue) }),
+        ]
+        for table in tables {
+            do {
+                try table.create()
+            } catch {
+                print(CallsSensor.TAG, "[Error] Cannot create the table '\(table.name)': \(error)")
+            }
+        }
+    }
+
     public init(_ config:CallsSensor.Config){
         super.init()
         CONFIG = config
         initializeDbEngine(config: config)
+        initializeTables()
         super.syncConfig = DbSyncConfig().apply { c in
             c.dispatchQueue = DispatchQueue(label: "com.awareframework.ios.sensor.calls.sync.queue")
         }
